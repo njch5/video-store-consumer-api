@@ -1,18 +1,19 @@
 class MovieWrapper
   BASE_URL = "https://api.themoviedb.org/3/"
   KEY = ENV["MOVIEDB_KEY"]
-
+  
   BASE_IMG_URL = "https://image.tmdb.org/t/p/"
   DEFAULT_IMG_SIZE = "w185"
   DEFAULT_IMG_URL = "http://lorempixel.com/185/278/"
-
+  
+  
   def self.search(query, retries_left=3)
     raise ArgumentError.new("Can't search without a MOVIEDB_KEY.  Please check your .env file!") unless KEY
-
+    
     url = BASE_URL + "search/movie?api_key=" + KEY + "&query=" + query
-
+    
     response =  HTTParty.get(url)
-
+    
     if response.success?
       if response["total_results"] == 0
         return []
@@ -24,15 +25,15 @@ class MovieWrapper
       end
     elsif retries_left > 0
       sleep(1.0 / (2 ** retries_left))
-
+      
       return self.search(query, retries_left - 1)
     else
       raise "Request failed: #{url}"
     end
   end
-
+  
   private
-
+  
   def self.construct_movie(api_result)
     Movie.new(
       title: api_result["title"],
@@ -42,7 +43,7 @@ class MovieWrapper
       external_id: api_result["id"]
     )
   end
-
+  
   def self.construct_image_url(img_name)
     if img_name.nil?
       return nil
