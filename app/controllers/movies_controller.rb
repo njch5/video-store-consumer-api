@@ -12,13 +12,29 @@ class MoviesController < ApplicationController
   end
 
   def show
-    render(
-      status: :ok,
-      json: @movie.as_json(
-        only: [:title, :overview, :release_date, :inventory],
-        methods: [:available_inventory]
-        )
+    @movie = Movie.find_by(params[:title])
+
+    if @movie
+      render(
+        status: :ok,
+        json: @movie.as_json(
+          only: [:title, :overview, :release_date, :inventory],
+          methods: [:available_inventory],
+        ),
       )
+    else
+      external_movie = MovieWrapper.search(params[:title])
+      if external_movie.nil?
+        render status: :not_found, json: { errors: { title: "Title not found" } }
+      else
+        render(
+          status: :ok,
+          json: external_movie.as_json(
+            only: [:title, :overview, :release_date],
+          ),
+        )
+      end
+    end
   end
 
   private
